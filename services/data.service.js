@@ -1,5 +1,6 @@
 // client sidele service fldrne pole serverlm create akunu clientln varuna reqst solve cheyan database kodukan
 //regstr  reqst varumbo  aa fun ns define cheyan
+const jwt = require('jsonwebtoken')
 
 database = {
   1000: { acno: 1000, uname: "Neer", password: 1000, balance: 5000, transaction: [] },
@@ -56,13 +57,21 @@ const login = (acno, password) => {
       currentUname = database[acno]["uname"]
       //login cheyumbo ulla current usermte acno m uname m eduthu
 
+      //token generation
+
+      const token = jwt.sign({
+        currentAcno: acno    //current acnolek token store cheyan
+      },
+        'supersecretkey'  //string ayitula oru secret key generete cheyuka
+      )
 
       return {
         statusCode: 200,
         status: true,
         message: "successfully login",
         currentAcno,
-        currentUname
+        currentUname,
+        token  //clientlek token koode send cheythu kodukum
       }
 
 
@@ -93,9 +102,6 @@ const deposit = (acno, password, amt) => {
 
   var amount = parseInt(amt)
 
-
-
-
   if (acno in database) {
     if (password == database[acno]["password"]) {
       database[acno]["balance"] += amount
@@ -104,7 +110,7 @@ const deposit = (acno, password, amt) => {
         amount: amount,
         type: "credit"
       })
-      
+
       return {
         // return database[acno]["balance"]
         statusCode: 200,
@@ -112,8 +118,8 @@ const deposit = (acno, password, amt) => {
         message: amount + "successfully deposited...and new balance is" + database[acno]["balance"]
 
       }
-    
-  }
+
+    }
 
     else {
       // alert("incorrct password")
@@ -144,80 +150,117 @@ const deposit = (acno, password, amt) => {
 
 //withdraw 
 
-const withdraw=(acno,password,amt)=>
-{
+const withdraw = (req, acno, password, amt) => {
 
-var amount=parseInt(amt)
+  var amount = parseInt(amt)
 
-  
+  var currentAcno = req.currentAcno // login cheythal thanano withdrw cheyune nokan reqstle cuurent acno ne  loginle cuurnt acnolek koduthu //current login cyeythal thannano widrw rqstcheythe nokan
 
-if(acno in database)
-{
-  if(password == database[acno]["password"])
-  {
-    if(database[acno]["balance"]>amount)
-    {
-      database[acno]["balance"]-=amount
-      database[acno]["transaction"].push({
-        amount:amount,
-        type:"Debit"
-      })
+  if (acno in database) {
+    if (password == database[acno]["password"]) {
+      if (currentAcno == acno) {//login cheythatha acno ano withdrw cheyune check akm alkl operation denied avm
 
-      return {
-        // return database[acno]["balance"]
-        statusCode: 200,
-        status: true,
-        message: amount + "successfully debited...and new balance is" + database[acno]["balance"]
+        if (database[acno]["balance"] > amount) {
+          database[acno]["balance"] -= amount
+          database[acno]["transaction"].push({
+            amount: amount,
+            type: "Debit"
+          })
+
+          return {
+            // return database[acno]["balance"]
+            statusCode: 200,
+            status: true,
+            message: amount + "successfully debited...and new balance is" + database[acno]["balance"]
+
+          }
+
+
+
+
+        }
+        else {
+          //alert("insufficient balance")
+          return {
+            statusCode: 422,
+            status: false,
+            message: "insufficient balance"
+
+          }
+
+        }
+
 
       }
+      else{
+        return {
+          statusCode: 422,
+          status: false,
+          message: "operation denied"
 
-      
-      
+        }
 
+      }
     }
-    else
-    {
-      //alert("insufficient balance")
+    else {
+      //alert("incorrct password")
       return {
         statusCode: 422,
         status: false,
-        message: "insufficient balance"
+        message: "incorrct password"
 
       }
 
     }
   }
-  else
-  {
-    //alert("incorrct password")
+  else {
+    //alert("user not exist")
     return {
       statusCode: 422,
       status: false,
-      message: "incorrct password"
+      message: "user not exist"
 
     }
 
   }
- }
-else {
-  //alert("user not exist")
-  return {
-    statusCode: 422,
-    status: false,
-    message: "user not exist"
+}
+
+
+//transaction
+
+const getTransaction = (acno) => {
+  if (acno in database) {
+
+    return {
+      statusCode: 200,
+      status: true,
+      transaction: database[acno]["transaction"]
+
+    }
 
   }
+  else {
+    return {
+      statusCode: 422,
+      status: false,
+      message: "user not exist"
 
+    }
+
+  }
 }
-}
 
 
-//modules import akuka functionte
+
+
+
+//modules import akuka functionte vere filesl refer cheynkl import chrynm iviide
 
 module.exports = {
-  register, 
+  register,
   login,
-   deposit,
-   withdraw
+  deposit,
+  withdraw,
+  getTransaction
 }
 

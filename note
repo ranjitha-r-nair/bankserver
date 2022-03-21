@@ -1,0 +1,52 @@
+                server creation -express /nodejs  
+
+                           command 
+                       
+                  1.create package.json -  npm init
+
+                  2.install express-  npm i  express
+
+                  3.to run server  -  node index.js/nodemon index.js
+
+                  4.to install nodemon - npm i -g nodemon  / sudo npm i -g nodemon
+
+                  5.Install jsonwebtoken  - npm i jsonwebtoken
+
+
+                          steps -  server creation
+                  
+                  
+                  1.create folder for server
+
+                  2.create package.json
+                 
+                  3.install express
+                  
+                  4.create index.js file
+                  
+                  5.import express in index.js
+                  
+                  6.create an app using express
+                  
+                  7.set up the port number
+
+                  8.resolve http request
+
+                  9.run server -nodemon
+
+                  10.parse json data in index,js
+
+                  11.middileware-(req,res,next)=>{}
+
+                      11.1 application specific middle ware -used in entire application
+
+                      11.1 router specific middle ware-
+
+                   12.jwt token
+
+                       12.1 token generation -sign()
+
+                       12.2  token validation - verify()
+
+
+

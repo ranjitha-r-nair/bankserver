@@ -1,7 +1,8 @@
 //import express in index.js
 const express = require('express')
 
-
+//import jsonwebtoken
+const jwt = require('jsonwebtoken')
 
 
 //index.js l registerne kitan  servicene import 
@@ -49,6 +50,42 @@ app.delete('/', (req, res) => {
 })
 
 
+
+//application specific middleware
+
+const appMiddleware = (req, res, next) => {
+  console.log("application specific middleware")
+  next()
+}
+
+app.use(appMiddleware)
+
+//to verify token-middleware
+
+
+const jwtMiddleware = (req, res, next) => {
+  try {
+   // const token = req.body.token   //requestn token edukum 
+   const token = req.headers["x-access-token"] //headerl token kodukum
+
+    //verify token
+
+    const data = jwt.verify(token, 'supersecretkey')
+    //login cheytha alde current acno data.current acno lnu kitum  arano withdrw or deposit polula request varna acno lek eduth vakm athum withdrw rqstle acnom same ankl mathram allow cheym
+    req.currentAcno = data.currentAcno   //token generate cheytha tml ullla accno ne eduth requestnakathula currnt acnolek eduth vakunu
+    next()
+  }
+  catch {
+    res.status(422).json({
+      statusCode: 422,
+      status: false,
+      message: "please log in"
+    })
+  }
+}
+
+
+
 //bank api
 
 //register api
@@ -81,8 +118,8 @@ app.post('/login', (req, res) => {
 })
 
 //deposit
-
-app.post('/deposit', (req, res) => {
+//router specific
+app.post('/deposit', jwtMiddleware,(req, res) => {
 
   const result = dataService.deposit(req.body.acno, req.body.password, req.body.amt)
   res.status(result.statusCode).json(result)
@@ -90,11 +127,18 @@ app.post('/deposit', (req, res) => {
 
 //withdraw
 
-app.post('/withdraw', (req, res) => {
+app.post('/withdraw',jwtMiddleware, (req, res) => {
 
-  const result = dataService.withdraw(req.body.acno, req.body.password, req.body.amt)
+  const result = dataService.withdraw(req,req.body.acno, req.body.password, req.body.amt)
   res.status(result.statusCode).json(result)
 })
+
+app.post('/transaction',jwtMiddleware, (req, res) => {
+
+  const result = dataService.getTransaction(req.body.acno)
+  res.status(result.statusCode).json(result)
+})
+
 
 
 
