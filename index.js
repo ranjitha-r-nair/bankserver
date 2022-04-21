@@ -1,17 +1,28 @@
 //import express in index.js
 const express = require('express')
 
-//import jsonwebtoken
-const jwt = require('jsonwebtoken')
-
-
 //index.js l registerne kitan  servicene import 
 
 const dataService = require('./services/data.service')
 
-//create an app using express
+
+//import jsonwebtoken
+const jwt = require('jsonwebtoken')
+
+//import cors
+
+const cors = require('cors')
+
+
+//create an server app using express
 
 const app = express()
+
+//use core  to specify origin
+//front endm back endm integrate cheyan
+app.use(cors({
+  origin: 'http://localhost:4200'
+}))
 
 
 //to parse json using express
@@ -19,9 +30,9 @@ const app = express()
 
 app.use(express.json())
 
-//resolve http reqst from clientr
+//resolve http reqst from client
 
-app.get('/', (req, res) => {
+app.get('/', (req, res) => { //to read data
 
   res.send("its  get method")
 
@@ -65,8 +76,8 @@ app.use(appMiddleware)
 
 const jwtMiddleware = (req, res, next) => {
   try {
-   // const token = req.body.token   //requestn token edukum 
-   const token = req.headers["x-access-token"] //headerl token kodukum
+    // const token = req.body.token   //requestn token edukum 
+    const token = req.headers["x-access-token"] //headerl token kodukum
 
     //verify token
 
@@ -92,8 +103,12 @@ const jwtMiddleware = (req, res, next) => {
 
 app.post('/register', (req, res) => {
 
-  const result = dataService.register(req.body.acno, req.body.uname, req.body.password)
-  res.status(result.statusCode).json(result)
+  //asynchronous
+  dataService.register(req.body.acno, req.body.uname, req.body.password)
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
+
 
   //         if (result)
   //         {
@@ -113,33 +128,53 @@ app.post('/register', (req, res) => {
 
 app.post('/login', (req, res) => {
 
-  const result = dataService.login(req.body.acno, req.body.password)
-  res.status(result.statusCode).json(result)
+  dataService.login(req.body.acno, req.body.password)
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
+
 })
 
 //deposit
 //router specific
-app.post('/deposit', jwtMiddleware,(req, res) => {
+app.post('/deposit', jwtMiddleware, (req, res) => {
 
-  const result = dataService.deposit(req.body.acno, req.body.password, req.body.amt)
-  res.status(result.statusCode).json(result)
+  dataService.deposit(req.body.acno, req.body.password, req.body.amt)
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
+
 })
 
 //withdraw
 
-app.post('/withdraw',jwtMiddleware, (req, res) => {
+app.post('/withdraw', jwtMiddleware, (req, res) => {
 
-  const result = dataService.withdraw(req,req.body.acno, req.body.password, req.body.amt)
-  res.status(result.statusCode).json(result)
-})
-
-app.post('/transaction',jwtMiddleware, (req, res) => {
-
-  const result = dataService.getTransaction(req.body.acno)
-  res.status(result.statusCode).json(result)
+  dataService.withdraw(req, req.body.acno, req.body.password, req.body.amt)
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
 })
 
 
+//transaction
+app.post('/transaction', jwtMiddleware, (req, res) => {
+
+  dataService.getTransaction(req.body.acno) 
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
+})
+
+//delete acc
+
+app.delete('/deleteAcc/:acno',jwtMiddleware, (req, res) => {
+
+  dataService.deleteAcc(req.params.acno)
+    .then(result => {
+      res.status(result.statusCode).json(result)
+    })
+})
 
 
 
